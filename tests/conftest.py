@@ -40,7 +40,9 @@ def keeper(accounts):
 
 @pytest.fixture
 def token():
-    token_address = "0x6b175474e89094c44da98b954eedeac495271d0f"  # this should be the address of the ERC-20 used by the strategy/vault (DAI)
+    token_address = "0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"  
+    # YFI https://www.coingecko.com/en/coins/yearn-finance
+    # https://etherscan.io/token/0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e
     yield Contract(token_address)
 
 
