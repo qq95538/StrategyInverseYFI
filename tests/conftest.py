@@ -48,10 +48,10 @@ def token():
 
 @pytest.fixture
 def amount(accounts, token, user):
-    amount = 10_000 * 10 ** token.decimals()
+    amount = 20 * 10 ** token.decimals()
     # In order to get some funds for the token you are about to use,
     # it impersonate an exchange address to use it's funds.
-    reserve = accounts.at("0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643", force=True)
+    reserve = accounts.at("0x28c6c06298d514db089934071355e5743bf21d60", force=True) #whale learned from https://github.com/jmonteer/yearnV2-gen-lev-lending
     token.transfer(user, amount, {"from": reserve})
     yield amount
 
