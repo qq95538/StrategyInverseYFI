@@ -58,6 +58,11 @@ def test_profitable_harvest(
     assert pytest.approx(strategy.estimatedTotalAssets(), rel=RELATIVE_APPROX) == amount
 
     # TODO: Add some code before harvest #2 to simulate earning yield
+    # @FP told me:
+    # create yield
+    # you can airdrop tokens on the strategy or just sleep until you earn yield
+    # compound yield is block based, so you probably need to use chain.mine(some_number_of_blocks)
+
 
     # Harvest 2: Realize profit
     chain.sleep(1)

@@ -1,5 +1,6 @@
 pragma solidity >=0.5.0;
 import "./InterestRateModel.sol";
+import "./ComptrollerI.sol";
 
 interface CTokenI {
     /*** Market Events ***/
@@ -137,4 +138,5 @@ interface CTokenI {
     function totalBorrows() external view returns (uint256);
 
     function totalSupply() external view returns (uint256);
+
 }

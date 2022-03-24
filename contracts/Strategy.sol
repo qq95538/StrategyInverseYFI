@@ -67,7 +67,13 @@ contract Strategy is BaseStrategy {
             require(_loss == 0, "redeem loss");
         }
 
-        StrategyParams memory params = vault.strategies(address(this));    
+        StrategyParams memory params = vault.strategies(address(this));
+        // I cannot find the forked comptroller address of inverse finance. 
+        // Where to claim comp?
+        // Comptroller.claimComp(address(this));
+        // @FP told me a way to find it. use etherscan to check anToken relative contracts.
+        // https://etherscan.io/address/0xde2af899040536884e062D3a334F2dD36F34b4a4#readContract
+
         uint256 totalAssets = estimatedTotalAssets();
         if(params.totalDebt <= totalAssets){
              _profit = totalAssets.sub(params.totalDebt);           
