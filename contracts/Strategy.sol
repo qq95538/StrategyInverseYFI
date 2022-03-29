@@ -19,21 +19,29 @@ import {
 
 // Import interfaces for many popular DeFi projects, or add your own!
 import "../interfaces/compound/CErc20I.sol";
+import "../interfaces/compound/ComptrollerI.sol";
+import {IUniswapV2Router} from "../interfaces/uniswap/IUniswapV2Router.sol";
+
 contract Strategy is BaseStrategy {
     using SafeERC20 for IERC20;
     using Address for address;
     using SafeMath for uint256;
 
-    address addr_anYFI = 0xde2af899040536884e062D3a334F2dD36F34b4a4;
-    address addr_comp_of_inverse = 0x4dCf7407AE5C07f8681e1659f626E114A7667339;
-    address addr_INV = 0x41D5D79431A913C4aE7d69a668ecdfE5fF9DFB68;
-    address addr_xINV = 0x1637e4e9941D55703a7A5E7807d6aDA3f7DCD61B;
+    address private constant addr_anYFI = 0xde2af899040536884e062D3a334F2dD36F34b4a4;
+    address private constant addr_comp_of_inverse = 0x4dCf7407AE5C07f8681e1659f626E114A7667339;
+    address private constant addr_INV = 0x41D5D79431A913C4aE7d69a668ecdfE5fF9DFB68;
+    address private constant addr_xINV = 0x1637e4e9941D55703a7A5E7807d6aDA3f7DCD61B;
+    address private constant addr_weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     CErc20I anYFI = CErc20I(addr_anYFI);
     IERC20 INV = IERC20(addr_INV); 
     CErc20I xINV = CErc20I(addr_xINV);
+    IERC20 weth = IERC20(addr_weth);
     ComptrollerI comp_of_inverse = ComptrollerI(addr_comp_of_inverse);
 
-
+    // SWAP routers
+    IUniswapV2Router private constant SUSHI_V2_ROUTER =
+        IUniswapV2Router(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
+    
     constructor(address _vault) public BaseStrategy(_vault) {
         // You can set these parameters on deployment to whatever you want
         // maxReportDelay = 6300;
@@ -41,6 +49,8 @@ contract Strategy is BaseStrategy {
         // debtThreshold = 0;
         want.approve(addr_anYFI, uint256(-1));
         INV.approve(addr_xINV, uint256(-1));
+        INV.approve(address(SUSHI_V2_ROUTER), uint256(-1));
+        want.approve(address(SUSHI_V2_ROUTER), uint256(-1));
 
     }
 
@@ -53,9 +63,10 @@ contract Strategy is BaseStrategy {
 
     function estimatedTotalAssets() public view override returns (uint256) {
         // TODO: Build a more accurate estimate using the value of all positions in terms of `want`
-        uint xInv_amount = xINV.balanceOf(address(this)).mul(xINV.exchangeRateStored()).div(10**18);
+        uint inv_in_xInv_values_as_YFI = quoteINV2YFIOnSushi(xINV.balanceOf(address(this)).mul(xINV.exchangeRateStored()).div(10**18));
+        
         //inv_value = inv_amount * price
-        return want.balanceOf(address(this)).add(anYFI.balanceOf(address(this)).mul(anYFI.exchangeRateStored()).div(10**18));
+        return want.balanceOf(address(this)).add(anYFI.balanceOf(address(this)).mul(anYFI.exchangeRateStored()).div(10**18)).add(inv_in_xInv_values_as_YFI);
     }
 
     function prepareReturn(uint256 _debtOutstanding)
@@ -140,6 +151,10 @@ contract Strategy is BaseStrategy {
     function liquidateAllPositions() internal override returns (uint256) {
         // TODO: Liquidate all positions and return the amount freed.
         anYFI.redeem(anYFI.balanceOf(address(this)));
+        xINV.redeem(xINV.balanceOf(address(this)));
+        comp_of_inverse.claimComp(address(this));
+        if(INV.balanceOf(address(this)) > 0)
+            _sellINVForWant(INV.balanceOf(address(this)), 0);
         return want.balanceOf(address(this));
     }
 
@@ -197,4 +212,48 @@ contract Strategy is BaseStrategy {
         // TODO create an accurate price oracle
         return _amtInWei;
     }
+
+    function getTokenOutPathV2(address _token_in, address _token_out)
+        internal
+        pure
+        returns (address[] memory _path)
+    {
+        bool is_weth =
+            _token_in == addr_weth || _token_out == addr_weth;
+        _path = new address[](is_weth ? 2 : 3);
+        _path[0] = _token_in;
+
+        if (is_weth) {
+            _path[1] = _token_out;
+        } else {
+            _path[1] = addr_weth;
+            _path[2] = _token_out;
+        }
+    }
+
+    function quoteINV2YFIOnSushi(uint256 INV_amount) internal view returns(uint256 YFI_amount){
+
+        if(INV_amount > 0){
+            uint256[] memory amounts = SUSHI_V2_ROUTER.getAmountsOut(
+                    INV_amount,
+                    getTokenOutPathV2(addr_INV, address(want))
+                );
+            YFI_amount = amounts[amounts.length - 1];
+        }
+    }
+    
+    function _sellINVForWant(uint256 amountIn, uint256 minOut) internal {
+        if (amountIn == 0) {
+            return;
+        }
+        SUSHI_V2_ROUTER.swapExactTokensForTokens(
+                amountIn,
+                minOut,
+                getTokenOutPathV2(addr_INV, address(want)),
+                address(this),
+                now
+            );
+    }
+
+
 }
