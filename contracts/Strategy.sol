@@ -63,10 +63,14 @@ contract Strategy is BaseStrategy {
 
     function estimatedTotalAssets() public view override returns (uint256) {
         // TODO: Build a more accurate estimate using the value of all positions in terms of `want`
-        uint inv_in_xInv_values_as_YFI = quoteINV2YFIOnSushi(xINV.balanceOf(address(this)).mul(xINV.exchangeRateStored()).div(10**18));
-        
+        //uint inv_in_xInv_values_as_YFI = quoteINV2YFIOnSushi(xINV.balanceOf(address(this)).mul(xINV.exchangeRateStored()).div(10**18));
         //inv_value = inv_amount * price
-        return want.balanceOf(address(this)).add(anYFI.balanceOf(address(this)).mul(anYFI.exchangeRateStored()).div(10**18)).add(inv_in_xInv_values_as_YFI);
+        return want.balanceOf(address(this)).add(anYFI.balanceOf(address(this)).mul(anYFI.exchangeRateStored()).div(10**18));
+    }
+
+    function getExchangeRate() public view returns (uint256 rate) {
+        (, uint256 ctokenBalance, uint256 borrowBalance, uint256 exchangeRate) = anYFI.getAccountSnapshot(address(this));
+        rate = exchangeRate;
     }
 
     function prepareReturn(uint256 _debtOutstanding)

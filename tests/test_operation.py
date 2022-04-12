@@ -57,22 +57,36 @@ def test_profitable_harvest(
     strategy.harvest()
     assert pytest.approx(strategy.estimatedTotalAssets(), rel=RELATIVE_APPROX) == amount
 
-    # TODO: Add some code before harvest #2 to simulate earning yield
-    # @FP told me:
-    # create yield
-    # you can airdrop tokens on the strategy or just sleep until you earn yield
-    # compound yield is block based, so you probably need to use chain.mine(some_number_of_blocks)
+    print("Step 1. cToken exchange Rate before profitable harvest:")
+    print(strategy.getExchangeRate()/(10**(18+18-10))) 
+    chain.mine(1)
+    
 
+    #print(strategy.anYFIbalance()) 
+    # TODO: Add some code before harvest #2 to simulate earning yield
+    
+    # sleep until earn yield on 
+    # https://github.com/Grandthrax/YearnV2-Generic-Lev-Comp-Farm 
+    # def sleep(chain, blocks):
+    #   timeN = chain.time()
+    #   endTime = blocks*13 + timeN
+    #   chain.mine(blocks,endTime)
+    
+    wait_blocks = 25
+    timeN = chain.time()
+    endTime =wait_blocks * 13 + timeN
+    chain.mine(wait_blocks, timeN)
 
     # Harvest 2: Realize profit
-    chain.sleep(1)
     strategy.harvest()
+    print("Step 2. cToken exchange Rate after chain.mine()")
+    print(strategy.getExchangeRate()/(10**(18+18-10))) 
     chain.sleep(3600 * 6)  # 6 hrs needed for profits to unlock
     chain.mine(1)
     profit = token.balanceOf(vault.address)  # Profits go to vault
-    # TODO: Uncomment the lines below
-    # assert token.balanceOf(strategy) + profit > amount
-    # assert vault.pricePerShare() > before_pps
+    # TODO: Uncomment the lines below 
+    #assert token.balanceOf(strategy) + profit > amount
+    #assert vault.pricePerShare() > before_pps
 
 
 def test_change_debt(
