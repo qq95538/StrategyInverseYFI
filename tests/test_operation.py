@@ -61,7 +61,7 @@ def test_profitable_harvest(
     
     print("Step 1. cToken exchange Rate before profitable harvest:")
     print("block:")
-    print(web3.eth.block_number)
+    print(web3.eth.BlockNumber)
     print("time")
     print(chain.time)
     print("cToken exchange rate:")
@@ -87,7 +87,7 @@ def test_profitable_harvest(
     strategy.harvest()
     print("Step 2. cToken exchange Rate after chain.mine()")
     print("block:")
-    print(web3.eth.block_number)
+    print(web3.eth.BlockNumber)
     print("time")
     print(chain.time)
     print("cToken exchange rate:")
