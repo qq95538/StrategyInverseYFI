@@ -60,12 +60,9 @@ def test_profitable_harvest(
 
     
     print("Step 1. cToken exchange Rate before profitable harvest:")
-    print("block:")
-    print(web3.eth.BlockNumber)
-    print("time")
-    print(chain.time)
-    print("cToken exchange rate:")
     print(strategy.getExchangeRate()/(10**(18+18-10))) 
+    print("chain snapshot:")
+    print(chain.snapshot())
 
 
     #print(strategy.anYFIbalance()) 
@@ -82,16 +79,13 @@ def test_profitable_harvest(
     timeN = chain.time()
     endTime =wait_blocks * 13 + timeN
     chain.mine(wait_blocks, timeN)
-
+    chain.mine(25)
     # Harvest 2: Realize profit
     strategy.harvest()
     print("Step 2. cToken exchange Rate after chain.mine()")
-    print("block:")
-    print(web3.eth.BlockNumber)
-    print("time")
-    print(chain.time)
-    print("cToken exchange rate:")
     print(strategy.getExchangeRate()/(10**(18+18-10))) 
+    print("chain snapshot:")
+    print(chain.snapshot())
     chain.sleep(3600 * 6)  # 6 hrs needed for profits to unlock
     chain.mine(1)
     profit = token.balanceOf(vault.address)  # Profits go to vault
