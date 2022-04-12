@@ -75,11 +75,7 @@ def test_profitable_harvest(
     #   endTime = blocks*13 + timeN
     #   chain.mine(blocks,endTime)
     
-    wait_blocks = 25
-    timeN = chain.time()
-    endTime =wait_blocks * 13 + timeN
-    chain.mine(wait_blocks, timeN)
-    chain.mine(25)
+    chain.sleep(3600 * 24 * 30)
     # Harvest 2: Realize profit
     strategy.harvest()
     print("Step 2. cToken exchange Rate after chain.mine()")
