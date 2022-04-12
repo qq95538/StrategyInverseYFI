@@ -1,4 +1,5 @@
 import brownie
+import web3
 from brownie import Contract
 import pytest
 
@@ -57,10 +58,15 @@ def test_profitable_harvest(
     strategy.harvest()
     assert pytest.approx(strategy.estimatedTotalAssets(), rel=RELATIVE_APPROX) == amount
 
-    print("Step 1. cToken exchange Rate before profitable harvest:")
-    print(strategy.getExchangeRate()/(10**(18+18-10))) 
-    chain.mine(1)
     
+    print("Step 1. cToken exchange Rate before profitable harvest:")
+    print("block:")
+    print(web3.eth.block_number)
+    print("time")
+    print(chain.time)
+    print("cToken exchange rate:")
+    print(strategy.getExchangeRate()/(10**(18+18-10))) 
+
 
     #print(strategy.anYFIbalance()) 
     # TODO: Add some code before harvest #2 to simulate earning yield
@@ -80,6 +86,11 @@ def test_profitable_harvest(
     # Harvest 2: Realize profit
     strategy.harvest()
     print("Step 2. cToken exchange Rate after chain.mine()")
+    print("block:")
+    print(web3.eth.block_number)
+    print("time")
+    print(chain.time)
+    print("cToken exchange rate:")
     print(strategy.getExchangeRate()/(10**(18+18-10))) 
     chain.sleep(3600 * 6)  # 6 hrs needed for profits to unlock
     chain.mine(1)
